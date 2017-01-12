@@ -36,7 +36,18 @@
 
 
 <!--END GOOGLE PLUS SIGN IN BUTTON -->
-	<script type="text/javascript">
+
+	<div class="fb-login-button" 
+	data-max-rows="1" 
+	data-size="xlarge" 
+	data-show-faces="false"
+	 data-auto-logout-link="false" 
+	 data-scope = "public_profile, email"
+	 onlogin = "sendTokenToServer()">登录一下呗帅哥</div>
+
+
+  </body>
+  	<script type="text/javascript">
 		function signInCallback(authResult){
 			if (authResult['code']){
 				$('#signInButton').attr('style', 'display:none');
@@ -62,6 +73,55 @@
 			}
 		}
 	</script>
-  </body>
+	<script>
+		  window.fbAsyncInit = function() {
+		    FB.init({
+		      appId      : '1315994791757188',
+		      xfbml      : true,
+		      version    : 'v2.8'
+		    });
+		    FB.AppEvents.logPageView();
+		  };
 
+		  (function(d, s, id){
+		     var js, fjs = d.getElementsByTagName(s)[0];
+		     if (d.getElementById(id)) {return;}
+		     js = d.createElement(s); js.id = id;
+		     js.src = "//connect.facebook.net/en_US/sdk.js";
+		     fjs.parentNode.insertBefore(js, fjs);
+		   }(document, 'script', 'facebook-jssdk'));
+	</script>
+	<script type="text/javascript">
+		function sendTokenToServer(){
+			var access_token;
+			FB.getLoginStatus(function(response){
+				console.log(response)
+				access_token = response.authResponse.accessToken
+			});
+			console.log("Welcome! Fetching your access token... ")
+			console.log(access_token)
+			FB.api('/me', function(response){
+				console.log("Successful login for: " + response.name);
+				console.log(response);
+			})
+			//ajax function
+			$.ajax({
+				type: 'POST',
+				url: '/fbconnect?state={{STATE}}',
+				processData: false,
+				data: access_token,
+				contentType: 'application/octet-stream; charset=utf-8',
+				success: function(result){
+						if(result){
+							$('#result').html("FaceBook Login Successful!<br>" + result + "<br>Redirecting...");
+							setTimeout(function(){
+								window.location.href = "/restaurant";
+							}, 15000);
+						}else{
+							$('#result').text('Failed to make a FaceBook server-side call. Check your configuration and console.');
+						}
+					}
+			});
+		}
+	</script>
   </html>
