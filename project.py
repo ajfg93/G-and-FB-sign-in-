@@ -91,15 +91,16 @@ def fbdisconnect():
   url = 'https://graph.facebook.com/%s/permissions' % facebook_id
   h = httplib2.Http()
   result = h.request(url, 'DELETE')[1]
+  #no error handler
   del login_session['provider'] 
   del login_session['username'] 
   del login_session['email'] 
   del login_session['facebook_id'] 
   del login_session['user_id']
-  return "you have been logged out"
+  flash("you have logged out from FaceBook")
+  return redirect(url_for('showRestaurants'))
 
-
-@app.route("/gdisconnect")
+@app.route('/gdisconnect')
 def gdisconnect():
   access_token = login_session.get('credentials')
   if access_token is None:
@@ -116,13 +117,23 @@ def gdisconnect():
     del login_session['email']
     del login_session['picture']
 
-    response = make_response(json.dumps("Successfully disconnected."), 200)
-    response.headers['Content-Type'] = "application/json"
-    return response
+    # response = make_response(json.dumps("Successfully disconnected."), 200)
+    # response.headers['Content-Type'] = "application/json"
+    flash("you have logged out from Google")
+    return redirect(url_for('showRestaurants'))
   else:
     response = make_response(json.dumps("Failed to revoke token for given user."), 400)
     response.headers['Content-Type'] = 'application/json'
     return response
+
+@app.route('/disconnect')
+def disconnect():
+  if login_session['provider'] == 'google':
+    return gdisconnect()
+  elif login_session['provider'] == 'facebook':
+    return fbdisconnect()
+  else:
+    return "unknown error from disconnect function"
 
 @app.route('/gconnect', methods = ['POST'])
 def gconnect():
@@ -184,6 +195,8 @@ def gconnect():
   login_session['username'] = data['name']
   login_session['picture'] = data['picture']
   login_session['email'] = data['email']
+  login_session['provider'] = 'google'
+  login_session['gplus_id'] = gplus_id
 
   if getUserID(login_session['email']) is None:
     user_id = createUser(login_session)
